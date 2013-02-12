@@ -6,7 +6,7 @@ if (isset($_GET["oracle"])) {
 	define("DRIVER", "oracle");
 	if (extension_loaded("oci8")) {
 		class Min_DB {
-			var $extension = "oci8", $_link, $_result, $server_info, $affected_rows, $error;
+			var $extension = "oci8", $_link, $_result, $server_info, $affected_rows, $errno, $error;
 
 			function _error($errno, $error) {
 				if (ini_bool("html_errors")) {
@@ -37,8 +37,10 @@ if (isset($_GET["oracle"])) {
 
 			function query($query, $unbuffered = false) {
 				$result = oci_parse($this->_link, $query);
+				$this->error = "";
 				if (!$result) {
 					$error = oci_error($this->_link);
+					$this->errno = $error["code"];
 					$this->error = $error["message"];
 					return false;
 				}
@@ -358,6 +360,13 @@ ORDER BY PROCESS
 	function show_status() {
 		$rows = get_rows('SELECT * FROM v$instance');
 		return reset($rows);
+	}
+	
+	function convert_field($field) {
+	}
+	
+	function unconvert_field($field, $return) {
+		return $return;
 	}
 	
 	function support($feature) {

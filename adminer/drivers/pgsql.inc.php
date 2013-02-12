@@ -58,6 +58,7 @@ if (isset($_GET["pgsql"])) {
 			
 			function query($query, $unbuffered = false) {
 				$result = @pg_query($this->_link, $query);
+				$this->error = "";
 				if (!$result) {
 					$this->error = pg_last_error($this->_link);
 					return false;
@@ -258,7 +259,7 @@ ORDER BY a.attnum"
 			$connection2 = $connection;
 		}
 		$return = array();
-		$table_oid = $connection2->result("SELECT oid FROM pg_class WHERE relname = " . q($table));
+		$table_oid = $connection2->result("SELECT oid FROM pg_class WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = current_schema()) AND relname = " . q($table));
 		$columns = get_key_vals("SELECT attnum, attname FROM pg_attribute WHERE attrelid = $table_oid AND attnum > 0", $connection2);
 		foreach (get_rows("SELECT relname, indisunique, indisprimary, indkey FROM pg_index i, pg_class ci WHERE i.indrelid = $table_oid AND ci.oid = i.indexrelid", $connection2) as $row) {
 			$return[$row["relname"]]["type"] = ($row["indisprimary"] == "t" ? "PRIMARY" : ($row["indisunique"] == "t" ? "UNIQUE" : "INDEX"));
@@ -573,10 +574,18 @@ AND typelem = 0"
 	}
 
 	function process_list() {
-		return get_rows("SELECT * FROM pg_stat_activity ORDER BY procpid");
+		global $connection;
+		return get_rows("SELECT * FROM pg_stat_activity ORDER BY " . ($connection->server_info < 9.2 ? "procpid" : "pid"));
 	}
 	
 	function show_status() {
+	}
+	
+	function convert_field($field) {
+	}
+	
+	function unconvert_field($field, $return) {
+		return $return;
 	}
 	
 	function support($feature) {
@@ -588,7 +597,7 @@ AND typelem = 0"
 	$structured_types = array();
 	foreach (array( //! arrays
 		lang('Numbers') => array("smallint" => 5, "integer" => 10, "bigint" => 19, "boolean" => 1, "numeric" => 0, "real" => 7, "double precision" => 16, "money" => 20),
-		lang('Date and time') => array("date" => 13, "time" => 17, "timestamp" => 20, "interval" => 0),
+		lang('Date and time') => array("date" => 13, "time" => 17, "timestamp" => 20, "timestamptz" => 21, "interval" => 0),
 		lang('Strings') => array("character" => 0, "character varying" => 0, "text" => 0, "tsquery" => 0, "tsvector" => 0, "uuid" => 0, "xml" => 0),
 		lang('Binary') => array("bit" => 0, "bit varying" => 0, "bytea" => 0),
 		lang('Network') => array("cidr" => 43, "inet" => 43, "macaddr" => 17, "txid_snapshot" => 0),

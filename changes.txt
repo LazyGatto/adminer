@@ -1,10 +1,68 @@
-Adminer 3.4.0-dev:
-Print current time next to executed SQL queries
-Highlight code in SQL command by CodeMirror
+Adminer 3.6.4-dev:
+Recover original view, trigger, routine if creating fails
+Disable autocapitalize in identifiers
+Indeterminate state of select all checkboxes
+
+Adminer 3.6.3 (released 2013-01-23):
+Display error code in SQL query
+Allow specifying external links
+Treat Meta key same as Ctrl
+Fix XSS in displaying non-UTF-8 strings
+Don't use type="number" for decimal numbers
+
+Adminer 3.6.2 (released 2012-12-21):
+Edit values by Ctrl+click instead of double click
+Don't select row on double click
+Support NULL in routine calls
+Shorten printed values in varchar fields
+Display table default values on wide screens
+Display date in SQL history
+HTML5 input fields
+Display warning for missing UPDATE privilege
+Fix switching language on first load
+Support enabled mbstring.func_overload
+MySQL: Prolong comment length since MySQL 5.5
+PostgreSQL: Fix process list in version 9.2
+MS SQL: Support databases starting with number
+
+Adminer 3.6.1 (released 2012-09-17):
+Fix compiled version on PHP with multibyte support
+
+Adminer 3.6.0 (released 2012-09-16):
+Load more data in select
+Edit strings with \n in textarea
+Time out long running database list and select count
+Use VALUES() in INSERT+UPDATE export
+Style logout button as link
+Store selected database to permanent login
+Ctrl+click and Shift+click on button opens form to a blank window
+Switch language by POST
+Compress translations
+MySQL: Support geometry data types
+selectQueryBuild() method (customization)
+Serbian translation
+
+Adminer 3.5.1 (released 2012-08-10):
+Support same name fields in CSV export
+Support Shift+click in export
+
+Adminer 3.5.0 (released 2012-08-05):
+Links for column search in select
+Autohide column context menu in select
+Autodisplay long table names in tables list
+Display assigned auto_increment after clone
+SQLite: Full alter table
+SQLite: Better editing in tables without primary key
+SQLite: Display number of rows in database overview
+
+Adminer 3.4.0 (released 2012-06-30):
 Link to descending order
+Shift+click on checkbox to select consecutive rows
+Print current time next to executed SQL queries
 Warn about selecting data without index
 Allow specifying database in login form
 Link to original table in EXPLAIN of SELECT * FROM table t
+Format numbers in translations
 MySQL: inform about disabled event_scheduler
 SQLite: support binary data
 PostgreSQL: approximate row count in table overview
@@ -12,8 +70,10 @@ PostgreSQL: improve PDO support in SQL command
 Oracle: schema, processlist, table overview numbers
 Simplify work with NULL values (customization)
 Use namespace in login form (customization)
+Customizable export filename (customization)
 Replace JSMin by better JavaScript minifier
 Don't use AJAX links and forms
+Indonesian translation
 Ukrainian translation
 Bengali translation
 

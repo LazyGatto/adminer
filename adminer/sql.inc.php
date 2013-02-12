@@ -14,11 +14,7 @@ if (!$error && $_POST["clear"]) {
 	redirect(remove_from_uri("history"));
 }
 
-$codemirror_path = "../externals/CodeMirror2";
-$codemirror_mode = ($jush == "sql" ? "mysql" : "plsql");
-$error_lines = array();
-
-page_header(lang('SQL command'), $error, array(), "", "<link rel='stylesheet' href='$codemirror_path/lib/codemirror.css'>");
+page_header(lang('SQL command'), $error);
 
 if (!$error && $_POST) {
 	$fp = false;
@@ -39,13 +35,13 @@ if (!$error && $_POST) {
 		if ($query != "" && strlen($query) < 1e6) { // don't add big queries
 			$q = $query . (ereg(";[ \t\r\n]*\$", $query) ? "" : ";"); //! doesn't work with DELIMITER |
 			if (!$history || reset(end($history)) != $q) { // no repeated queries
+				restart_session();
 				$history[] = array($q, time());
+				set_session("queries", $history_all); // required because reference is unlinked by stop_session()
+				stop_session();
 			}
 		}
 		$space = "(?:\\s|/\\*.*\\*/|(?:#|-- )[^\n]*\n|--\n)";
-		if (!ini_bool("session.use_cookies")) {
-			session_write_close();
-		}
 		$delimiter = ";";
 		$offset = 0;
 		$empty = true;
@@ -62,7 +58,7 @@ if (!$error && $_POST) {
 		$dump_format = $adminer->dumpFormat();
 		unset($dump_format["sql"]);
 		while ($query != "") {
-			if (!$offset && preg_match("~^$space*DELIMITER\\s+(.+)~i", $query, $match)) {
+			if (!$offset && preg_match("~^$space*DELIMITER\\s+(\\S+)~i", $query, $match)) {
 				$delimiter = $match[1];
 				$query = substr($query, strlen($match[0]));
 			} else {
@@ -108,8 +104,7 @@ if (!$error && $_POST) {
 							$time = format_time($start, $end) . (strlen($q) < 1000 ? " <a href='" . h(ME) . "sql=" . urlencode(trim($q)) . "'>" . lang('Edit') . "</a>" : ""); // 1000 - maximum length of encoded URL in IE is 2083 characters
 							if ($connection->error) {
 								echo ($_POST["only_errors"] ? $print : "");
-								echo "<p class='error'>" . lang('Error in query') . ": " . error() . "\n";
-								$error_lines[] = $line + (function_exists('error_line') ? error_line() : 0);
+								echo "<p class='error'>" . lang('Error in query') . ($connection->errno ? " ($connection->errno)" : "") . ": " . error() . "\n";
 								$errors[] = " <a href='#sql-$commands'>$commands</a>";
 								if ($_POST["error_stops"]) {
 									break 2;
@@ -141,7 +136,7 @@ if (!$error && $_POST) {
 								if (preg_match("~^$space*(CREATE|DROP|ALTER)$space+(DATABASE|SCHEMA)\\b~isU", $q)) {
 									restart_session();
 									set_session("dbs", null); // clear cache
-									session_write_close();
+									stop_session();
 								}
 								if (!$_POST["only_errors"]) {
 									echo "<p class='message' title='" . h($connection->info) . "'>" . lang('Query executed OK, %d row(s) affected.', $connection->affected_rows) . "$time\n";
@@ -180,8 +175,8 @@ if ($_POST) {
 } elseif ($_GET["history"] != "") {
 	$q = $history[$_GET["history"]][0];
 }
-textarea("query", $q, 20, 80, "query");
-echo ($_POST ? "" : "<script type='text/javascript'>document.getElementById('query').focus();</script>\n");
+textarea("query", $q, 20);
+echo ($_POST ? "" : "<script type='text/javascript'>document.getElementsByTagName('textarea')[0].focus();</script>\n");
 echo "<p>" . (ini_bool("file_uploads")
 	? lang('File upload') . ': <input type="file" name="sql_file"' . ($_FILES && $_FILES["sql_file"]["error"] != 4 ? '' : ' onchange="this.form[\'only_errors\'].checked = true;"') . '> (&lt; ' . ini_get("upload_max_filesize") . 'B)' // ignore post_max_size because it is for all form fields together and bytes computing would be necessary
 	: lang('File uploads are disabled.')
@@ -210,7 +205,7 @@ if ($history) {
 	print_fieldset("history", lang('History'), $_GET["history"] != "");
 	foreach ($history as $key => $val) {
 		list($q, $time) = $val;
-		echo '<a href="' . h(ME . "sql=&history=$key") . '">' . lang('Edit') . "</a> <span class='time'>" . @date("H:i:s", $time) . "</span> <code class='jush-$jush'>" . shorten_utf8(ltrim(str_replace("\n", " ", str_replace("\r", "", preg_replace('~^(#|-- ).*~m', '', $q)))), 80, "</code>") . "<br>\n"; // @ - time zone may be not set
+		echo '<a href="' . h(ME . "sql=&history=$key") . '">' . lang('Edit') . "</a> <span class='time' title='" . @date('Y-m-d', $time) . "'>" . @date("H:i:s", $time) . "</span> <code class='jush-$jush'>" . shorten_utf8(ltrim(str_replace("\n", " ", str_replace("\r", "", preg_replace('~^(#|-- ).*~m', '', $q)))), 80, "</code>") . "<br>\n"; // @ - time zone may be not set
 	}
 	echo "<input type='submit' name='clear' value='" . lang('Clear') . "'>\n";
 	echo "<a href='" . h(ME . "sql=&history=all") . "'>" . lang('Edit all') . "</a>\n";
@@ -219,12 +214,3 @@ if ($history) {
 ?>
 
 </form>
-
-<script src="<?php echo $codemirror_path; ?>/lib/codemirror.js"></script>
-<script src="<?php echo "$codemirror_path/mode/$codemirror_mode/$codemirror_mode.js"; ?>"></script>
-<script type="text/javascript">
-if (window.CodeMirror) {
-	var codeMirror = CodeMirror.fromTextArea(document.getElementById('query'), { mode: 'text/x-<?php echo $codemirror_mode; ?>' });
-	<?php foreach ($error_lines as $line) { ?>codeMirror.setLineClass(<?php echo $line; ?>, '', 'error');<?php } ?>
-}
-</script>
