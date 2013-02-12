@@ -32,7 +32,9 @@ if ($tables_views && !$error && !$_POST["search"]) {
 			: apply_queries("VACUUM" . ($_POST["optimize"] ? "" : " ANALYZE"), $_POST["tables"])
 		);
 		$message = lang('Tables have been optimized.');
-	} elseif ($_POST["tables"] && ($result = queries(($_POST["optimize"] ? "OPTIMIZE" : ($_POST["check"] ? "CHECK" : ($_POST["repair"] ? "REPAIR" : "ANALYZE"))) . " TABLE " . implode(", ", array_map('idf_escape', $_POST["tables"]))))) {
+	} elseif (!$_POST["tables"]) {
+		$message = lang('No tables.');
+	} elseif ($result = queries(($_POST["optimize"] ? "OPTIMIZE" : ($_POST["check"] ? "CHECK" : ($_POST["repair"] ? "REPAIR" : "ANALYZE"))) . " TABLE " . implode(", ", array_map('idf_escape', $_POST["tables"])))) {
 		while ($row = $result->fetch_assoc()) {
 			$message .= "<b>" . h($row["Table"]) . "</b>: " . h($row["Msg_text"]) . "<br>";
 		}
@@ -50,11 +52,11 @@ if ($adminer->homepage()) {
 			echo "<p class='message'>" . lang('No tables.') . "\n";
 		} else {
 			echo "<form action='' method='post'>\n";
-			echo "<p>" . lang('Search data in tables') . ": <input name='query' value='" . h($_POST["query"]) . "'> <input type='submit' name='search' value='" . lang('Search') . "'>\n";
+			echo "<p>" . lang('Search data in tables') . ": <input type='search' name='query' value='" . h($_POST["query"]) . "'> <input type='submit' name='search' value='" . lang('Search') . "'>\n";
 			if ($_POST["search"] && $_POST["query"] != "") {
 				search_tables();
 			}
-			echo "<table cellspacing='0' class='nowrap checkable' onclick='tableClick(event);'>\n";
+			echo "<table cellspacing='0' class='nowrap checkable' onclick='tableClick(event);' ondblclick='tableClick(event, true);'>\n";
 			echo '<thead><tr class="wrap"><td><input id="check-all" type="checkbox" onclick="formCheck(this, /^(tables|views)\[/);">';
 			echo '<th>' . lang('Table');
 			echo '<td>' . lang('Engine');
@@ -105,7 +107,7 @@ if ($adminer->homepage()) {
 				if (count($databases) != 1 && $jush != "sqlite") {
 					$db = (isset($_POST["target"]) ? $_POST["target"] : (support("scheme") ? $_GET["ns"] : DB));
 					echo "<p>" . lang('Move to other database') . ": ";
-					echo ($databases ? html_select("target", $databases, $db) : '<input name="target" value="' . h($db) . '">');
+					echo ($databases ? html_select("target", $databases, $db) : '<input name="target" value="' . h($db) . '" autocapitalize="off">');
 					echo " <input type='submit' name='move' value='" . lang('Move') . "'>";
 					echo (support("copy") ? " <input type='submit' name='copy' value='" . lang('Copy') . "'>" : "");
 					echo "\n";
@@ -174,12 +176,13 @@ if ($adminer->homepage()) {
 			$rows = get_rows("SHOW EVENTS");
 			if ($rows) {
 				echo "<table cellspacing='0'>\n";
-				echo "<thead><tr><th>" . lang('Name') . "<td>" . lang('Schedule') . "<td>" . lang('Start') . "<td>" . lang('End') . "</thead>\n";
+				echo "<thead><tr><th>" . lang('Name') . "<td>" . lang('Schedule') . "<td>" . lang('Start') . "<td>" . lang('End') . "<td></thead>\n";
 				foreach ($rows as $row) {
 					echo "<tr>";
-					echo '<th><a href="' . h(ME) . 'event=' . urlencode($row["Name"]) . '">' . h($row["Name"]) . "</a>";
+					echo "<th>" . h($row["Name"]);
 					echo "<td>" . ($row["Execute at"] ? lang('At given time') . "<td>" . $row["Execute at"] : lang('Every') . " " . $row["Interval value"] . " " . $row["Interval field"] . "<td>$row[Starts]");
 					echo "<td>$row[Ends]";
+					echo '<td><a href="' . h(ME) . 'event=' . urlencode($row["Name"]) . '">' . lang('Alter') . '</a>';
 				}
 				echo "</table>\n";
 				$event_scheduler = $connection->result("SELECT @@event_scheduler");

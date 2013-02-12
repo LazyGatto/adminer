@@ -113,11 +113,10 @@ function referencable_primary($self) {
 * @param int
 * @param int
 * @param string
-* @param string
 * @return null
 */
-function textarea($name, $value, $rows = 10, $cols = 80, $id = "") {
-	echo "<textarea name='$name'" . ($id ? " id='$id'" : "") . " rows='$rows' cols='$cols' class='sqlarea' spellcheck='false' wrap='off' onkeydown='return textareaKeydown(this, event);'>"; // spellcheck, wrap - not valid before HTML5
+function textarea($name, $value, $rows = 10, $cols = 80) {
+	echo "<textarea name='$name' rows='$rows' cols='$cols' class='sqlarea' spellcheck='false' wrap='off' onkeydown='return textareaKeydown(this, event);'>"; // spellcheck, wrap - not valid before HTML5
 	if (is_array($value)) {
 		foreach ($value as $val) { // not implode() to save memory
 			echo h($val[0]) . "\n\n\n"; // $val == array($query, $time)
@@ -148,7 +147,7 @@ function edit_type($key, $field, $collations, $foreign_keys = array()) {
 	global $structured_types, $types, $unsigned, $on_actions;
 	?>
 <td><select name="<?php echo $key; ?>[type]" class="type" onfocus="lastType = selectValue(this);" onchange="editingTypeChange(this);"><?php echo optionlist((!$field["type"] || isset($types[$field["type"]]) ? array() : array($field["type"])) + $structured_types + ($foreign_keys ? array(lang('Foreign keys') => $foreign_keys) : array()), $field["type"]); ?></select>
-<td><input name="<?php echo $key; ?>[length]" value="<?php echo h($field["length"]); ?>" size="3" onfocus="editingLengthFocus(this);"><td class="options"><?php
+<td><input name="<?php echo $key; ?>[length]" value="<?php echo h($field["length"]); ?>" size="3" onfocus="editingLengthFocus(this);"><td class="options"><?php //! type="number" with enabled JavaScript
 	echo "<select name='$key" . "[collation]'" . (ereg('(char|text|enum|set)$', $field["type"]) ? "" : " class='hidden'") . '><option value="">(' . lang('collation') . ')' . optionlist($collations, $field["collation"]) . '</select>';
 	echo ($unsigned ? "<select name='$key" . "[unsigned]'" . (!$field["type"] || ereg('(int|float|double|decimal)$', $field["type"]) ? "" : " class='hidden'") . '><option>' . optionlist($unsigned, $field["unsigned"]) . '</select>' : '');
 	echo ($foreign_keys ? "<select name='$key" . "[on_delete]'" . (ereg("`", $field["type"]) ? "" : " class='hidden'") . "><option value=''>(" . lang('ON DELETE') . ")" . optionlist(explode("|", $on_actions), $field["on_delete"]) . "</select> " : " "); // space for IE
@@ -221,7 +220,7 @@ function type_class($type) {
 * @return null
 */
 function edit_fields($fields, $collations, $type = "TABLE", $allowed = 0, $foreign_keys = array(), $comments = false) {
-	global $inout;
+	global $connection, $inout;
 	?>
 <thead><tr class="wrap">
 <?php if ($type == "PROCEDURE") { ?><td>&nbsp;<?php } ?>
@@ -232,10 +231,10 @@ function edit_fields($fields, $collations, $type = "TABLE", $allowed = 0, $forei
 <?php if ($type == "TABLE") { ?>
 <td>NULL
 <td><input type="radio" name="auto_increment_col" value=""><acronym title="<?php echo lang('Auto Increment'); ?>">AI</acronym>
-<td<?php echo ($_POST["defaults"] ? "" : " class='hidden'"); ?>><?php echo lang('Default values'); ?>
+<td><?php echo lang('Default values'); ?>
 <?php echo (support("comment") ? "<td" . ($comments ? "" : " class='hidden'") . ">" . lang('Comment') : ""); ?>
 <?php } ?>
-<td><?php echo "<input type='image' name='add[" . (support("move_col") ? 0 : count($fields)) . "]' src='../adminer/static/plus.gif' alt='+' title='" . lang('Add next') . "'>"; ?><script type="text/javascript">row_count = <?php echo count($fields); ?>;</script>
+<td><?php echo "<input type='image' class='icon' name='add[" . (support("move_col") ? 0 : count($fields)) . "]' src='../adminer/static/plus.gif' alt='+' title='" . lang('Add next') . "'>"; ?><script type="text/javascript">row_count = <?php echo count($fields); ?>;</script>
 </thead>
 <tbody onkeydown="return editingKeydown(event);">
 <?php
@@ -246,22 +245,22 @@ function edit_fields($fields, $collations, $type = "TABLE", $allowed = 0, $forei
 		?>
 <tr<?php echo ($display ? "" : " style='display: none;'"); ?>>
 <?php echo ($type == "PROCEDURE" ? "<td>" . html_select("fields[$i][inout]", explode("|", $inout), $field["inout"]) : ""); ?>
-<th><?php if ($display) { ?><input name="fields[<?php echo $i; ?>][field]" value="<?php echo h($field["field"]); ?>" onchange="<?php echo ($field["field"] != "" || count($fields) > 1 ? "" : "editingAddRow(this, $allowed); "); ?>editingNameChange(this);" maxlength="64"><?php } ?><input type="hidden" name="fields[<?php echo $i; ?>][orig]" value="<?php echo h($orig); ?>">
+<th><?php if ($display) { ?><input name="fields[<?php echo $i; ?>][field]" value="<?php echo h($field["field"]); ?>" onchange="<?php echo ($field["field"] != "" || count($fields) > 1 ? "" : "editingAddRow(this, $allowed); "); ?>editingNameChange(this);" maxlength="64" autocapitalize="off"><?php } ?><input type="hidden" name="fields[<?php echo $i; ?>][orig]" value="<?php echo h($orig); ?>">
 <?php edit_type("fields[$i]", $field, $collations, $foreign_keys); ?>
 <?php if ($type == "TABLE") { ?>
 <td><?php echo checkbox("fields[$i][null]", 1, $field["null"]); ?>
 <td><input type="radio" name="auto_increment_col" value="<?php echo $i; ?>"<?php if ($field["auto_increment"]) { ?> checked<?php } ?> onclick="var field = this.form['fields[' + this.value + '][field]']; if (!field.value) { field.value = 'id'; field.onchange(); }">
-<td<?php echo ($_POST["defaults"] ? "" : " class='hidden'"); ?>><?php echo checkbox("fields[$i][has_default]", 1, $field["has_default"]); ?><input name="fields[<?php echo $i; ?>][default]" value="<?php echo h($field["default"]); ?>" onchange="this.previousSibling.checked = true;">
-<?php echo (support("comment") ? "<td" . ($comments ? "" : " class='hidden'") . "><input name='fields[$i][comment]' value='" . h($field["comment"]) . "' maxlength='255'>" : ""); ?>
+<td><?php echo checkbox("fields[$i][has_default]", 1, $field["has_default"]); ?><input name="fields[<?php echo $i; ?>][default]" value="<?php echo h($field["default"]); ?>" onchange="this.previousSibling.checked = true;">
+<?php echo (support("comment") ? "<td" . ($comments ? "" : " class='hidden'") . "><input name='fields[$i][comment]' value='" . h($field["comment"]) . "' maxlength='" . ($connection->server_info >= 5.5 ? 1024 : 255) . "'>" : ""); ?>
 <?php } ?>
 <?php
 		echo "<td>";
 		echo (support("move_col") ?
-			"<input type='image' name='add[$i]' src='../adminer/static/plus.gif' alt='+' title='" . lang('Add next') . "' onclick='return !editingAddRow(this, $allowed, 1);'>&nbsp;"
-			. "<input type='image' name='up[$i]' src='../adminer/static/up.gif' alt='^' title='" . lang('Move up') . "'>&nbsp;"
-			. "<input type='image' name='down[$i]' src='../adminer/static/down.gif' alt='v' title='" . lang('Move down') . "'>&nbsp;"
+			"<input type='image' class='icon' name='add[$i]' src='../adminer/static/plus.gif' alt='+' title='" . lang('Add next') . "' onclick='return !editingAddRow(this, $allowed, 1);'>&nbsp;"
+			. "<input type='image' class='icon' name='up[$i]' src='../adminer/static/up.gif' alt='^' title='" . lang('Move up') . "'>&nbsp;"
+			. "<input type='image' class='icon' name='down[$i]' src='../adminer/static/down.gif' alt='v' title='" . lang('Move down') . "'>&nbsp;"
 		: "");
-		echo ($orig == "" || support("drop_col") ? "<input type='image' name='drop_col[$i]' src='../adminer/static/cross.gif' alt='x' title='" . lang('Remove') . "' onclick='return !editingRemoveRow(this);'>" : "");
+		echo ($orig == "" || support("drop_col") ? "<input type='image' class='icon' name='drop_col[$i]' src='../adminer/static/cross.gif' alt='x' title='" . lang('Remove') . "' onclick='return !editingRemoveRow(this);'>" : "");
 		echo "\n";
 	}
 }
@@ -339,23 +338,72 @@ function grant($grant, $privileges, $columns, $on) {
 /** Drop old object and create a new one
 * @param string drop query
 * @param string create query
+* @param string rollback query
 * @param string
 * @param string
 * @param string
 * @param string
 * @param string
-* @return bool dropped
+* @return null redirect in success
 */
-function drop_create($drop, $create, $location, $message_drop, $message_alter, $message_create, $name) {
+function drop_create($drop, $create, $rollback, $location, $message_drop, $message_alter, $message_create, $name) {
 	if ($_POST["drop"]) {
-		return query_redirect($drop, $location, $message_drop, true, !$_POST["dropped"]);
+		query_redirect($drop, $location, $message_drop);
+	} else {
+		if ($name != "") {
+			queries($drop);
+		}
+		queries_redirect($location, ($name != "" ? $message_alter : $message_create), queries($create));
+		if ($name != "") {
+			queries($rollback);
+		}
 	}
-	$dropped = $name != "" && ($_POST["dropped"] || queries($drop));
-	$created = queries($create);
-	if (!queries_redirect($location, ($name != "" ? $message_alter : $message_create), $created) && $dropped) {
-		redirect(null, $message_drop);
+}
+
+/** Generate SQL query for creating trigger
+* @param string
+* @return array result of trigger()
+*/
+function create_trigger($on, $row) {
+	global $jush;
+	$timing_event = " $row[Timing] $row[Event]";
+	return "CREATE TRIGGER " 
+		. idf_escape($row["Trigger"]) 
+		. ($jush == "mssql" ? $on . $timing_event : $timing_event . $on) 
+		. rtrim(" $row[Type]\n$row[Statement]", ";") 
+		. ";";
+}
+
+/** Generate SQL query for creating routine
+* @param string "PROCEDURE" or "FUNCTION"
+* @param array result of routine()
+* @return string
+*/
+function create_routine($routine, $row) {
+	global $inout;
+	$set = array();
+	$fields = (array) $row["fields"];
+	ksort($fields); // enforce fields order
+	foreach ($fields as $field) {
+		if ($field["field"] != "") {
+			$set[] = (ereg("^($inout)\$", $field["inout"]) ? "$field[inout] " : "") . idf_escape($field["field"]) . process_type($field, "CHARACTER SET");
+		}
 	}
-	return $dropped;
+	return "CREATE $routine " 
+		. idf_escape(trim($row["name"])) 
+		. " (" . implode(", ", $set) . ")" 
+		. (isset($_GET["function"]) ? " RETURNS" . process_type($row["returns"], "CHARACTER SET") : "") 
+		. ($row["language"] ? " LANGUAGE $row[language]" : "") 
+		. rtrim("\n$row[definition]", ";") 
+		. ";";
+}
+
+/** Remove current user definer from SQL command
+ * @param string
+ * @return string
+ */
+function remove_definer($query) {
+	return preg_replace('~^([A-Z =]+) DEFINER=`' . preg_replace('~@(.*)~', '`@`(%|\\1)', logged_user()) . '`~', '\\1', $query); //! proper escaping of user
 }
 
 /** Get string to add a file in TAR

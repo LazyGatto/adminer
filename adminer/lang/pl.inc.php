@@ -227,12 +227,15 @@ $translations = array(
 	'Limit' => 'Limit',
 	'Text length' => 'Długość tekstu',
 	'Action' => 'Czynność',
+	'Full table scan' => 'Wymaga pełnego przeskanowania tabeli',
 	'Unable to select the table' => 'Nie udało się pobrać danych z tabeli',
 	'No rows.' => 'Brak rekordów.',
 	'%d row(s)' => array('%d rekord', '%d rekordy', '%d rekordów'),
 	'Page' => 'Strona',
 	'last' => 'ostatni',
 	'Last page' => 'Ostatnia strona',
+	'Load more data' => 'Wczytaj więcej danych',
+	'Loading' => 'Wczytywanie',
 	'whole result' => 'wybierz wszystkie',
 	'%d byte(s)' => array('%d bajt', '%d bajty', '%d bajtów'),
 	
@@ -240,7 +243,7 @@ $translations = array(
 	'%d row(s) have been imported.' => array('%d rekord został zaimportowany.', '%d rekordy zostały zaimportowane.', '%d rekordów zostało zaimportowanych.'),
 	
 	// in-place editing in select
-	'Double click on a value to modify it.' => 'Kliknij podwójnie wartość, aby ją edytować.',
+	'Ctrl+click on a value to modify it.' => 'Ctrl+kliknij wartość, aby ją edytować.',
 	'Use edit link to modify this value.' => 'Użyj linku edycji aby zmienić tę wartość.',
 	
 	// %s can contain auto-increment value
@@ -260,6 +263,7 @@ $translations = array(
 	'Save and insert next' => 'Zapisz i dodaj następny',
 	'Clone' => 'Duplikuj',
 	'Delete' => 'Usuń',
+	'You have no privileges to update this table.' => 'Brak uprawnień do edycji tej tabeli',
 	
 	'E-mail' => 'E-mail',
 	'From' => 'Nadawca',

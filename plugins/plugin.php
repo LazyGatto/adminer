@@ -1,6 +1,7 @@
 <?php
 
 /** Adminer customization allowing usage of plugins
+* @link http://www.adminer.org/plugins/#use
 * @author Jakub Vrana, http://www.vrana.cz/
 * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
 * @license http://www.gnu.org/licenses/gpl-2.0.html GNU General Public License, version 2 (one or other)
@@ -39,6 +40,8 @@ class AdminerPlugin extends Adminer {
 			case 2: return parent::$function($args[0], $args[1]);
 			case 3: return parent::$function($args[0], $args[1], $args[2]);
 			case 4: return parent::$function($args[0], $args[1], $args[2], $args[3]);
+			case 5: return parent::$function($args[0], $args[1], $args[2], $args[3], $args[4]);
+			case 6: return parent::$function($args[0], $args[1], $args[2], $args[3], $args[4], $args[5]);
 			default: trigger_error('Too many parameters.', E_USER_WARNING);
 		}
 	}
@@ -52,6 +55,8 @@ class AdminerPlugin extends Adminer {
 					case 2: $return = $plugin->$function($args[0], $args[1]); break;
 					case 3: $return = $plugin->$function($args[0], $args[1], $args[2]); break;
 					case 4: $return = $plugin->$function($args[0], $args[1], $args[2], $args[3]); break;
+					case 5: $return = $plugin->$function($args[0], $args[1], $args[2], $args[3], $args[4]); break;
+					case 6: $return = $plugin->$function($args[0], $args[1], $args[2], $args[3], $args[4], $args[5]); break;
 					default: trigger_error('Too many parameters.', E_USER_WARNING);
 				}
 				if ($return !== null) {
@@ -112,6 +117,11 @@ class AdminerPlugin extends Adminer {
 	}
 
 	function databases() {
+		$args = func_get_args();
+		return $this->_applyPlugin(__FUNCTION__, $args);
+	}
+
+	function queryTimeout() {
 		$args = func_get_args();
 		return $this->_applyPlugin(__FUNCTION__, $args);
 	}
@@ -177,6 +187,11 @@ class AdminerPlugin extends Adminer {
 	}
 
 	function rowDescriptions() {
+		$args = func_get_args();
+		return $this->_applyPlugin(__FUNCTION__, $args);
+	}
+
+	function selectLink() {
 		$args = func_get_args();
 		return $this->_applyPlugin(__FUNCTION__, $args);
 	}
@@ -266,6 +281,11 @@ class AdminerPlugin extends Adminer {
 		return $this->_applyPlugin(__FUNCTION__, $args);
 	}
 
+	function selectQueryBuild() {
+		$args = func_get_args();
+		return $this->_applyPlugin(__FUNCTION__, $args);
+	}
+
 	function messageQuery() {
 		$args = func_get_args();
 		return $this->_applyPlugin(__FUNCTION__, $args);
@@ -291,6 +311,11 @@ class AdminerPlugin extends Adminer {
 		return $this->_applyPlugin(__FUNCTION__, $args);
 	}
 
+	function dumpFilename() {
+		$args = func_get_args();
+		return $this->_applyPlugin(__FUNCTION__, $args);
+	}
+
 	function dumpHeaders() {
 		$args = func_get_args();
 		return $this->_applyPlugin(__FUNCTION__, $args);
@@ -302,6 +327,11 @@ class AdminerPlugin extends Adminer {
 	}
 
 	function navigation() {
+		$args = func_get_args();
+		return $this->_applyPlugin(__FUNCTION__, $args);
+	}
+
+	function databasesPrint() {
 		$args = func_get_args();
 		return $this->_applyPlugin(__FUNCTION__, $args);
 	}
